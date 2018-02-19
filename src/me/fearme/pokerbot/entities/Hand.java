@@ -325,7 +325,7 @@ public class Hand implements Comparable<Hand> {
         }
 
         public List<Card> getRelevantCards(List<Card> cards) {
-            return evaluator.evaluate(cards);
+            return evaluator.apply(cards);
         }
 
         public List<Card> getKickers(List<Card> cards) {
@@ -397,7 +397,6 @@ public class Hand implements Comparable<Hand> {
             boolean add = false;
 
             for (List<Card> combination : combinations) {
-                String combinationString =
                 if(combination.equals(cards)) {
                     System.out.printf("found dupe with %d left\n", (2598960 - combinations.size()));
                 } else {

@@ -1,50 +1,103 @@
 package me.fearme.pokerbot.handlers;
 
-import me.fearme.pokerbot.entities.command.AbstractCommand;
-import me.fearme.pokerbot.entities.command.Command;
+import me.fearme.pokerbot.command.Command;
+import me.fearme.pokerbot.command.Trigger;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
- * Created by FearMe on 12-2-2018.
+ * @author Jorren Hendriks.
  */
 public class CommandHandler extends ListenerAdapter {
 
-    List<AbstractCommand> commands = new ArrayList<>();
+    private String prefix;
 
-    private final String prefix;
+    private Map<String, Command> commands;
+    private List<Trigger> triggers;
 
-    public CommandHandler(String prefix, AbstractCommand... commands) {
+    public CommandHandler(String prefix) {
+        commands = new HashMap<>();
+        triggers = new ArrayList<>();
+
         this.prefix = prefix;
-        addCommands(commands);
     }
 
-    public void addCommands(AbstractCommand... commands) {
-        for (AbstractCommand c : commands) {
-            if(c instanceof Command)
-                ((Command) c).setPrefix(prefix);
-            this.commands.add(c);
+    public void addCommand(Command command) {
+        boolean success = true;
+        for (String label : command.getLabels()) {
+            label = label.toLowerCase();
+            String prefixed = prefix + label;
+            if (commands.containsKey(prefixed)) {
+                System.err.println("Command with the label " + label + " already registered");
+                success = false;
+            } else {
+                commands.put(prefixed, command);
+                if (!command.isPrefixRequired()) {
+                    commands.put(label, command);
+                }
+            }
+        }
+        if (success) System.out.println("Succesfully registered the " + command + " command");
+    }
+
+    public void addCommands(Command... commands) {
+        for (Command command : commands) {
+            addCommand(command);
         }
     }
 
-    public String getPrefix() {
-        return prefix;
+    public void addTrigger(Trigger trigger) {
+        triggers.add(trigger);
+        System.out.println("Succesfully registered the " + trigger + " trigger");
+    }
+
+    public void addTriggers(Trigger... triggers) {
+        for (Trigger trigger : triggers) {
+            addTrigger(trigger);
+        }
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        String msg = event.getMessage().getContentDisplay().toLowerCase();
+        if (event.getAuthor().isBot()) return;
 
-        if (!msg.startsWith(prefix) || event.getAuthor().isBot()) {
+        String message = event.getMessage().getContentDisplay().toLowerCase();
+
+        String label = message.split(" ")[0];
+        if (commands.containsKey(label.toLowerCase())) {
+            Command command = commands.get(label.toLowerCase());
+            if (!command.isCaseSensitive() || Arrays.asList(command.getLabels()).contains(label)) {
+                command.execute(label, event);
+                return;
+            }
+        } else if (label.toLowerCase().equals(prefix + "help")) {
+            sendHelp(event);
             return;
         }
 
-        for (AbstractCommand command : commands) {
-            if (command.shouldRun(event))
-                command.execute(event);
+        for (Trigger trigger : triggers) {
+            for (String lbl : Arrays.asList(trigger.getLabels())) {
+                String msg = trigger.isCaseSensitive() ? message : message.toLowerCase();
+                if (msg.contains(lbl)) {
+                    trigger.execute(lbl, event);
+                    return;
+                }
+            }
         }
+    }
+
+    private void sendHelp(MessageReceivedEvent event) {
+        StringBuilder message = new StringBuilder();
+        Set<Command> unique = new HashSet<Command>();
+        unique.addAll(commands.values());
+        for (Command command : unique) {
+            message.append(command.toString());
+            message.append(" - ");
+            message.append(command.getDescription());
+            message.append('\n');
+        }
+        event.getChannel().sendMessage(message).queue();
     }
 }

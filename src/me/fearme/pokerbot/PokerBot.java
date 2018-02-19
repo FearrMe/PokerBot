@@ -1,8 +1,8 @@
 package me.fearme.pokerbot;
 
+import me.fearme.pokerbot.command.commands.Ping;
+import me.fearme.pokerbot.command.commands.Pong;
 import me.fearme.pokerbot.handlers.CommandHandler;
-import me.fearme.pokerbot.entities.command.commands.Ping;
-import me.fearme.pokerbot.entities.command.commands.Pong;
 import me.fearme.pokerbot.handlers.MessageHandler;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -18,7 +18,6 @@ public class PokerBot {
 
     public static JDA jda;
     public static CommandHandler commandHandler = new CommandHandler("p!");
-    public static CommandHandler noPrefix = new CommandHandler("");
 
     public static void main(String[] args) throws LoginException, InterruptedException {
         jda = new JDABuilder(AccountType.BOT).setToken("NDEyMDcxNTc1NTU1Mjc2ODAw.DWE7Zg.lijqmNy-mmNSHmjHT1M2aa84Juo").buildBlocking();
@@ -33,12 +32,10 @@ public class PokerBot {
             System.out.println("LOGGING OFF");
         }
 
-        jda.addEventListener(new MessageHandler());
+        commandHandler.addCommand(new Ping());
+        commandHandler.addTrigger(new Pong());
 
-        commandHandler.addCommands(new Ping());
-        noPrefix.addCommands(new Ping(), new Pong());
-
-        jda.addEventListener(commandHandler, noPrefix);
+        jda.addEventListener(commandHandler);
 
         System.out.println("-------------------------------------");
     }
