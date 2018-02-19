@@ -56,6 +56,19 @@ public class Card implements Comparable<Card> {
         return getRank().getValue() - card.getRank().getValue();
     }
 
+    public int reverseCompareTo(Card card) {
+        return -compareTo(card);
+    }
+
+    @Override
+    public boolean equals(Object card) {
+        return (card instanceof Card) && suit == ((Card) card).getSuit()  && ((Card) card).getRank() == rank;
+    }
+
+    @Override
+    public int hashCode() {
+        return (suit.hashCode() + rank.hashCode())/2;
+    }
     /*@Override
     public boolean equals(Object o) {
         if (!(o instanceof Card))

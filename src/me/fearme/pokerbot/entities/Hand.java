@@ -6,12 +6,17 @@ import me.fearme.pokerbot.entities.card.Deck;
 import me.fearme.pokerbot.util.Evaluator;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
  * Created by FearMe on 11-2-2018.
- * <p>
+ * <p/>
  * TODO: hand evaluator
  */
 public class Hand implements Comparable<Hand> {
@@ -208,7 +213,7 @@ public class Hand implements Comparable<Hand> {
                 int offset = 0;
                 for (int j = 1; (i + j) < tempCards.size(); j++) {
                     Card c2 = tempCards.get(i + j);
-                    if(c2.compareTo(tempCards.get(i+j-1)) == 0) {
+                    if (c2.compareTo(tempCards.get(i + j - 1)) == 0) {
                         offset++;
                         continue;
                     }
@@ -351,14 +356,14 @@ public class Hand implements Comparable<Hand> {
         System.out.println(h.compareTo(Hands.STRAIGHT_FLUSH)); // 0
         System.out.println(h.compareTo(Hands.HIGH_CARD)); // 1*/
 
-        HashMap<Hands, Integer> map = new HashMap<>();
+        /*HashMap<Hands, Integer> map = new HashMap<>();
         HashMap<Card.Rank, Integer> rankMap = new HashMap<>();
 
         for (Hands h : Hands.values()) {
             map.put(h, 0);
         }
 
-        for(Card.Rank r : Card.Rank.values()) {
+        for (Card.Rank r : Card.Rank.values()) {
             rankMap.put(r, 0);
         }
 
@@ -369,12 +374,27 @@ public class Hand implements Comparable<Hand> {
 
         List<Card> cards1 = new ArrayList<>();
 
-        for (int j = 0; j < 5; j++) {
-            Card c = deck.take();
-            rankMap.put(c.getRank(), rankMap.get(c.getRank()) + 1);
-            cards1.add(c);
-        }
+        cards1.add(new Card(Card.Rank.ACE, Suit.CLUBS));
+        cards1.add(new Card(Card.Rank.KING, Suit.HEARTS));
+        cards1.add(new Card(Card.Rank.TEN, Suit.SPADES));
+        cards1.add(new Card(Card.Rank.THREE, Suit.SPADES));
+        cards1.add(new Card(Card.Rank.QUEEN, Suit.HEARTS));
+        cards1.sort(Card::reverseCompareTo);
+
         combinations.add(cards1);
+
+        List<Card> cards2 = new ArrayList<>();
+
+        cards2.add(new Card(Card.Rank.ACE, Suit.CLUBS));
+        cards2.add(new Card(Card.Rank.TEN, Suit.SPADES));
+        cards2.add(new Card(Card.Rank.KING, Suit.HEARTS));
+        cards2.add(new Card(Card.Rank.THREE, Suit.SPADES));
+        cards2.add(new Card(Card.Rank.QUEEN, Suit.HEARTS));
+        cards2.sort(Card::reverseCompareTo);
+
+        combinations.add(cards1);
+
+        System.out.println(cards1.hashCode() + " + " + cards1.equals(cards2) + " + " + cards2.hashCode());
 
         try {
             Thread.sleep(500);
@@ -382,45 +402,46 @@ public class Hand implements Comparable<Hand> {
             e.printStackTrace();
         }
 
-        while(combinations.size() < 2598960) {
-            deck.reset();
-            List<Card> cards = new ArrayList<>();
+        ExecutorService threadExecutor = Executors.newSingleThreadExecutor();
+        Future future = threadExecutor.submit(() -> {
+                    while (combinations.size() < 2598960) {
+                        deck.reset();
+                        List<Card> cards = new ArrayList<>();
 
-            for (int j = 0; j < 5; j++) {
-                cards.add(deck.take());
+                        for (int j = 0; j < 5; j++) {
+                            cards.add(deck.take());
+                        }
+
+                        cards.sort(Card::reverseCompareTo);
+
+                        for (List<Card> combination : combinations) {
+                            List<Card> temp = new ArrayList<>(combination);
+                            temp.sort(Card::reverseCompareTo);
+                            if (combination.equals(cards)) {
+                                System.out.printf("found dupe with %d left\n", (2598960 - combinations.size()));
+                            } else {
+                                combinations.add(cards);
+                                break;
+                            }
+                        }
+
+                        if (combinations.size() % 100000 == 0) {
+                            System.out.printf("size: %d, %d left\n", combinations.size(), (2598960 - combinations.size()));
+                        }
+                    }
+                });
+
+        while(!future.isDone())
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-
-            cards.sort(Collections.reverseOrder());
-
-            System.out.println(cards.size());
-
-            boolean add = false;
-
-            for (List<Card> combination : combinations) {
-                String combinationString =
-                if(combination.equals(cards)) {
-                    System.out.printf("found dupe with %d left\n", (2598960 - combinations.size()));
-                } else {
-                    add = true;
-                    break;
-                }
-            }
-
-            if(add)
-                combinations.add(cards);
-            else {
-                System.out.println("verifying dupe");
-            }
-
-            if(combinations.size() % 100000 == 0) {
-                System.out.printf("size: %d, %d left\n", combinations.size(), (2598960 - combinations.size()));
-            }
-        }
 
         System.out.println("found all");
 
         for (List<Card> cards : combinations) {
-            cards.sort(Collections.reverseOrder());
+            cards.sort(Card::reverseCompareTo);
             Hand hand = Hand.getHand(cards);
 
             map.put(hand.rank, map.get(hand.rank) + 1);
@@ -428,11 +449,11 @@ public class Hand implements Comparable<Hand> {
 
         for (Hands h : Hands.values()) {
             int occurence = map.get(h);
-            System.out.printf("%06d | %s\n",  occurence, h.toString());
+            System.out.printf("%06d | %s\n", occurence, h.toString());
         }
 
 
-        if(true) {
+        if (true) {
             return;
         }
 
@@ -457,7 +478,7 @@ public class Hand implements Comparable<Hand> {
             map.put(hand.rank, map.get(hand.rank) + 1);
 
             if (i != 0 && i % interval == 0) {
-                System.out.println(i + "/" + n + " | " + ((i/(1.0 * n)) * 100) + "%");
+                System.out.println(i + "/" + n + " | " + ((i / (1.0 * n)) * 100) + "%");
                 for (Hands h : Hands.values()) {
                     int occurence = map.get(h);
                     double percent = occurence / (1.0 * (i + 1)) * 100;
@@ -466,14 +487,40 @@ public class Hand implements Comparable<Hand> {
                 System.out.println();
                 for (Card.Rank r : Card.Rank.values()) {
                     int occurence = rankMap.get(r);
-                    double percent = occurence / (1.0 * (n*7)) * 100;
+                    double percent = occurence / (1.0 * (n * 7)) * 100;
                     System.out.printf("%.4f%% %06d | %s\n", percent, occurence, r.toString());
                 }
                 System.out.println();
             }
         }
 
-        /*List<Card> cards = new ArrayList<>();
+        int m = 5;
+        long binomial = factorial(52).divide(
+                (factorial(m).multiply(factorial(52-m)))).longValue();
+
+        System.out.println(binomial);
+
+        List<Card> cards = new Deck().getCards();
+
+        List<List<Card>> combinations = new ArrayList<>();
+
+        for (int i = 0; i < binomial; i++) { // loop till all possible combinations are done
+            List<Card> combination = new ArrayList<>();
+            for (int j = 0; j < m; j++) {
+                combination.add(cards.get(((i * m) + j) % 51));
+            }
+            combination.sort(Card::reverseCompareTo);
+            combinations.add(combination);
+            if(i % 100000 == 0) {
+                System.out.println(i);
+            }
+        }
+
+        System.out.println(combinations.size());
+        System.out.println(combinations.size() == combinations.stream().distinct().count());
+        System.out.println(combinations.stream().distinct().count());
+
+        List<Card> cards = new ArrayList<>();
 
         cards.add(new Card(Card.Rank.ACE, Suit.CLUBS));
         cards.add(new Card(Card.Rank.KING, Suit.HEARTS));
@@ -517,7 +564,7 @@ public class Hand implements Comparable<Hand> {
         hand.getKickers().forEach(System.out::print);
         System.out.print(" || ");
         System.out.println("ACE LOW THREE THREE");
-        System.out.println();*/
+        System.out.println();
 
         for (Hands h : Hands.values()) {
             int occurence = map.get(h);
@@ -528,11 +575,11 @@ public class Hand implements Comparable<Hand> {
 
         for (Card.Rank r : Card.Rank.values()) {
             int occurence = rankMap.get(r);
-            double percent = occurence / (1.0 * (n*7)) * 100;
+            double percent = occurence / (1.0 * (n * 7)) * 100;
             System.out.printf("%.4f%% %06d | %s\n", percent, occurence, r.toString());
         }
 
-        /*Hands[] h = Hands.values();
+        Hands[] h = Hands.values();
 
         for (int i = h.length - 1; i >= 0; i--) {
             System.out.println(h[i]);
@@ -547,5 +594,13 @@ public class Hand implements Comparable<Hand> {
         cards.add(new Card(Card.Rank.ACE, Card.Suit.CLUBS));
         cards.add(new Card(Card.Rank.ACE, Card.Suit.HEARTS));
         cards.subList(0, 5).forEach(System.out::println);*/
+    }
+
+    static BigInteger factorial(int n) {
+        BigInteger ret = BigInteger.ONE;
+        for (long i = n; i > 0; i--) {
+            ret = ret.multiply(BigInteger.valueOf(i));
+        }
+        return ret;
     }
 }

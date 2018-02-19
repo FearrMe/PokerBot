@@ -36,6 +36,10 @@ public class Deck {
         return cards.remove(r.nextInt(cards.size()));
     }
 
+    public List<Card> getCards() {
+        return this.cards;
+    }
+
     public int size() {
         return cards.size();
     }
