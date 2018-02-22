@@ -1,14 +1,12 @@
 package me.fearme.pokerbot.command;
 
-import me.fearme.pokerbot.command.Executable;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 /**
  * @author Jorren Hendriks.
  */
-public abstract class Trigger extends Executable {
+public abstract class Trigger {
 
-    public Trigger(String label, String... labels) {
-        super(label, labels);
-    }
+    public abstract void execute(MessageReceivedEvent event);
 
 }

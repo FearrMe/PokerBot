@@ -79,12 +79,7 @@ public class CommandHandler extends ListenerAdapter {
 
         // if no command is executed fire any triggers
         for (Trigger trigger : triggers) {
-            for (String lbl : Arrays.asList(trigger.getLabels())) {
-                String msg = trigger.isCaseSensitive() ? message : message.toLowerCase();
-                if (msg.contains(lbl)) {
-                    trigger.execute(lbl, event);
-                }
-            }
+            trigger.execute(event);
         }
     }
 
@@ -95,7 +90,8 @@ public class CommandHandler extends ListenerAdapter {
         for (Command command : unique) {
             message.append(command.toString());
             message.append(" - ");
-            message.append(command.getDescription());
+            if (command.getDescription() != null)
+                message.append(command.getDescription());
             message.append('\n');
         }
         event.getChannel().sendMessage(message).queue();
