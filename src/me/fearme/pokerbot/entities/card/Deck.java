@@ -4,6 +4,8 @@ import java.util.*;
 
 import me.fearme.pokerbot.entities.card.Card.*;
 
+import static com.sun.deploy.security.X509DeployTrustManager.reset;
+
 /**
  * Created by FearMe on 11-2-2018.
  *
@@ -13,27 +15,27 @@ public class Deck {
 
     private long seed;
 
-    private List<Card> cards = new ArrayList<>();
-    private Random r = new Random();
+    private List<Card> cards;
 
     public Deck() {
-        seed = System.currentTimeMillis();
         reset();
     }
 
-    public void reset() {
-        cards.clear();
-        fill();
+    public void shuffle() {
+        Collections.shuffle(cards);
     }
 
-    public void fill() {
-        cards.addAll(Card.values());
+    public void reset() {
+        cards = Card.values();
+        shuffle();
     }
 
     public Card take() {
-        seed = r.nextInt(Integer.MAX_VALUE);
-        r.setSeed(++seed);
-        return cards.remove(r.nextInt(cards.size()));
+        if (size() > 0) {
+            return cards.remove(0);
+        }
+
+        return null;
     }
 
     public int size() {

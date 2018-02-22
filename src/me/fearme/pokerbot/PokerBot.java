@@ -1,5 +1,6 @@
 package me.fearme.pokerbot;
 
+import me.fearme.pokerbot.command.commands.ImperialToMetric;
 import me.fearme.pokerbot.command.commands.Ping;
 import me.fearme.pokerbot.command.commands.Pong;
 import me.fearme.pokerbot.handlers.CommandHandler;
@@ -34,6 +35,7 @@ public class PokerBot {
 
         commandHandler.addCommand(new Ping());
         commandHandler.addTrigger(new Pong());
+        commandHandler.addTrigger(new ImperialToMetric());
 
         jda.addEventListener(commandHandler);
 

@@ -77,12 +77,12 @@ public class CommandHandler extends ListenerAdapter {
             return;
         }
 
+        // if no command is executed fire any triggers
         for (Trigger trigger : triggers) {
             for (String lbl : Arrays.asList(trigger.getLabels())) {
                 String msg = trigger.isCaseSensitive() ? message : message.toLowerCase();
                 if (msg.contains(lbl)) {
                     trigger.execute(lbl, event);
-                    return;
                 }
             }
         }

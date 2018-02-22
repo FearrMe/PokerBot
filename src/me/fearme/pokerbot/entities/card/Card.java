@@ -46,24 +46,10 @@ public class Card implements Comparable<Card> {
         return rank.getId() + suit.getEmoji();
     }
 
-    /**
-     * 1 > 2 => 1
-     * 1 = 2 => 0
-     * 1 < 2 => -1
-     */
     @Override
     public int compareTo(Card card) {
         return getRank().getValue() - card.getRank().getValue();
     }
-
-    /*@Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Card))
-            return false;
-
-        Card c = (Card) o;
-        return (rank == c.getRank() && suit == c.getSuit());
-    }*/
 
     @Override
     public String toString() {
@@ -101,6 +87,11 @@ public class Card implements Comparable<Card> {
 
         public int getValue() {
             return value;
+        }
+
+        @Override
+        public String toString() {
+            return id;
         }
     }
 
